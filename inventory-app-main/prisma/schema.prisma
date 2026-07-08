@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+// 💻 Local SQLite (For local development / ZIP submission)
+// To use local database, comment out the PostgreSQL block below,
+// uncomment this block, and run: npx prisma db push && npx prisma db seed
+//
+// datasource db {
+//   provider = "sqlite"
+//   url      = "file:./dev.db"
+// }
+
+// 🌐 Cloud Database (Neon PostgreSQL — used by Vercel deployment)
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  productCode String   @unique
+  name        String
+  description String?
+  weight      Float?
+  price       Float
+  quantity    Int      @default(0)
+  lastUpdated DateTime @updatedAt
+
+  orderItems   OrderItem[]
+  wipMaterials WIPMaterial[]
+  wipOutputs   WIPOutput[]
+}
+
+model Customer {
+  id      Int     @id @default(autoincrement())
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  orders  Order[]
+}
+
+model Supplier {
+  id      Int     @id @default(autoincrement())
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  orders  Order[]
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNumber String      @unique
+  type        String      // "sale" | "purchase"
+  status      String      // sale: "quotation" | "packing" | "dispatch" | "completed"
+                          // purchase: "quotation_received" | "unpaid" | "paid" | "completed"
+  customerId  Int?
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  supplierId  Int?
+  supplier    Supplier?   @relation(fields: [supplierId], references: [id])
+  items       OrderItem[]
+  notes       String?
+  totalAmount Float       @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model Manufacturing {
+  id          Int           @id @default(autoincrement())
+  batchNumber String        @unique
+  status      String        @default("in_progress") // "in_progress" | "completed"
+  startDate   DateTime      @default(now())
+  endDate     DateTime?
+  notes       String?
+  materials   WIPMaterial[]
+  outputs     WIPOutput[]
+}
+
+model WIPMaterial {
+  id              Int           @id @default(autoincrement())
+  manufacturingId Int
+  manufacturing   Manufacturing @relation(fields: [manufacturingId], references: [id], onDelete: Cascade)
+  productId       Int
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+}
+
+model WIPOutput {
+  id              Int           @id @default(autoincrement())
+  manufacturingId Int
+  manufacturing   Manufacturing @relation(fields: [manufacturingId], references: [id], onDelete: Cascade)
+  productId       Int
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+}
