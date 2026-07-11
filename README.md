@@ -5,7 +5,7 @@ InventoryPro is a full-stack, cloud-connected Inventory Management System built 
 ## 🌐 Live Demo
 
 **Production URL**: *https://inventory-app-sigma-dun.vercel.app/login*
-**GitHub**: https://github.com/Jainparth22/inventory-app
+
 
 **Login Credentials**: `admin` / `admin123`
 
